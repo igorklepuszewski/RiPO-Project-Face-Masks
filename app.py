@@ -15,6 +15,12 @@ nose_mask = np.zeros((rows, cols), np.uint8)
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
+print("MASK PROJECT")
+print("For Pig Nose \t\t press \t '1'")
+print("For Wrestling Mask \t press \t '2'")
+print("For Clown Mask \t\t press \t '3'")
+print("For Dog Mask \t\t press \t '4'")
+
 def rotate_image(image, angle):
     angle =( angle*180)/3.14
     image_center = tuple(np.array(image.shape[1::-1]) / 2)
