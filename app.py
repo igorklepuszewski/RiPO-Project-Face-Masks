@@ -6,6 +6,8 @@ from math import hypot
 cap = cv2.VideoCapture(0)
 nose_image = cv2.imread("pig_nose.png")
 wrestling_image = cv2.imread("wrestling_mask.png")
+clown_image = cv2.imread("clown_mask.png")
+dog_image = cv2.imread("dog_mask.png")
 _, frame = cap.read()
 rows, cols, _ = frame.shape
 nose_mask = np.zeros((rows, cols), np.uint8)
@@ -52,7 +54,7 @@ def pig_mask(landmarks, nose_image, nose_mask):
     cv2.imshow("Nose mask", nose_mask)
     cv2.imshow("final nose", final_nose)
 
-def wrestling_mask(landmarks, wrestling_image, nose_mask):
+def full_mask(landmarks, wrestling_image, nose_mask, width_multiply, height_multiply, y_transform=0):
     forhead = (int((landmarks.part(21).x+landmarks.part(22).x)/2), int((landmarks.part(21).y+landmarks.part(22).y)/2))
     chin = (landmarks.part(8).x, landmarks.part(8).y)
     # cv2.circle(frame, (chin[0], chin[1]), 4, (0, 0, 255), -1)
@@ -62,14 +64,14 @@ def wrestling_mask(landmarks, wrestling_image, nose_mask):
     width_angle = right[0]-left[0]
     angle = np.arctan(height_angle/width_angle)
     width = int(hypot(left[0] - right[0],
-                       left[1] - right[1])*1.08)
+                       left[1] - right[1])*width_multiply)
     height = int(hypot(forhead[0] - chin[0],
-                       forhead[1] - chin[1])*1.7)
+                       forhead[1] - chin[1])*height_multiply)
     # New nose position
     top_left = (int(forhead[0] - width / 2),
-                          int(chin[1]-height))
+                          int(chin[1]-height+y_transform))
     bottom_right = (int(forhead[0] + width / 2),
-                   int(chin[1]))
+                   int(chin[1])+y_transform)
             # Adding the new nose
     mask_wrest = cv2.resize(wrestling_image, (width, height))
     mask_wrest = rotate_image(mask_wrest, angle)
@@ -89,6 +91,8 @@ def wrestling_mask(landmarks, wrestling_image, nose_mask):
 mask={
     'pig': 1,
     'wrestling': 2,
+    'clown': 3,
+    'dog': 4,
 }
 mask_number = 1
 while True:
@@ -101,7 +105,11 @@ while True:
         if mask_number == 1:
             pig_mask(landmarks, nose_image, nose_mask)
         elif mask_number == 2:
-            wrestling_mask(landmarks, wrestling_image, nose_mask)
+            full_mask(landmarks, wrestling_image, nose_mask,1.2,1.7)
+        elif mask_number == 3:
+            full_mask(landmarks, clown_image, nose_mask,1.8, 2.1,20)
+        elif mask_number == 4:
+            full_mask(landmarks, dog_image, nose_mask,2.1, 2.1,20)
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1)
     if key == 27:
@@ -114,3 +122,11 @@ while True:
         mask_number = mask['wrestling']
         nose_mask = np.zeros((rows, cols), np.uint8)
         print("wrestling", mask_number)
+    elif key == 51:
+        mask_number = mask['clown']
+        nose_mask = np.zeros((rows, cols), np.uint8)
+        print("clown", mask_number)
+    elif key == 52:
+        mask_number = mask['dog']
+        nose_mask = np.zeros((rows, cols), np.uint8)
+        print("dog", mask_number)
